@@ -1,0 +1,54 @@
+From 26eaf05651c645bbb2f88fbced3fd5c529fe7330 Mon Sep 17 00:00:00 2001
+From: ashraf moinuddin <dota2khelbo@gmail.com>
+Date: Mon, 20 Aug 2018 01:04:34 +0600
+Subject: [PATCH] My submission
+XOV:v2
+
+---
+ CrossSolar/Controllers/AnalyticsController.cs | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/CrossSolar/Controllers/AnalyticsController.cs b/CrossSolar/Controllers/AnalyticsController.cs
+index d2217d7..b92aca3 100644
+--- a/CrossSolar/Controllers/AnalyticsController.cs
++++ b/CrossSolar/Controllers/AnalyticsController.cs
+@@ -24,7 +24,7 @@ namespace CrossSolar.Controllers
+         }
+ 
+         // GET panel/XXXX1111YYYY2222/analytics
+-        [HttpGet("{banelId}/[controller]")]
++        [HttpGet("{panelId}/[controller]")]
+         public async Task<IActionResult> Get([FromRoute] string panelId)
+         {
+             var panel = await _panelRepository.Query()
+@@ -48,12 +48,26 @@ namespace CrossSolar.Controllers
+             return Ok(result);
+         }
+ 
+-        // GET panel/XXXX1111YYYY2222/analytics/day
++        // GET panel/1/analytics/day
+         [HttpGet("{panelId}/[controller]/day")]
+         public async Task<IActionResult> DayResults([FromRoute] string panelId)
+         {
+             var result = new List<OneDayElectricityModel>();
++            var oneHourElectricities = _analyticsRepository.Query().Where(a => a.PanelId == panelId).ToList();
++            var uniquedates = oneHourElectricities.Select(a => a.DateTime.Date).Distinct();
+ 
++            foreach (var d in uniquedates)
++            {
++                result.Add(new OneDayElectricityModel()
++                {
++                    Average = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Average(a => a.KiloWatt),
++                    Sum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Sum(a => a.KiloWatt),
++                    Maximum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Max(a => a.KiloWatt),
++                    Minimum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Min(a => a.KiloWatt),
++                    DateTime = d.Date
++                });
++            }
++            
+             return Ok(result);
+         }
+ 
+-- 
+2.17.0.windows.1
+
