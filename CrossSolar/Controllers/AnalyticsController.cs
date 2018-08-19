@@ -24,7 +24,7 @@ namespace CrossSolar.Controllers
         }
 
         // GET panel/XXXX1111YYYY2222/analytics
-        [HttpGet("{banelId}/[controller]")]
+        [HttpGet("{panelId}/[controller]")]
         public async Task<IActionResult> Get([FromRoute] string panelId)
         {
             var panel = await _panelRepository.Query()
@@ -48,12 +48,26 @@ namespace CrossSolar.Controllers
             return Ok(result);
         }
 
-        // GET panel/XXXX1111YYYY2222/analytics/day
+        // GET panel/1/analytics/day
         [HttpGet("{panelId}/[controller]/day")]
         public async Task<IActionResult> DayResults([FromRoute] string panelId)
         {
             var result = new List<OneDayElectricityModel>();
+            var oneHourElectricities = _analyticsRepository.Query().Where(a => a.PanelId == panelId).ToList();
+            var uniquedates = oneHourElectricities.Select(a => a.DateTime.Date).Distinct();
 
+            foreach (var d in uniquedates)
+            {
+                result.Add(new OneDayElectricityModel()
+                {
+                    Average = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Average(a => a.KiloWatt),
+                    Sum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Sum(a => a.KiloWatt),
+                    Maximum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Max(a => a.KiloWatt),
+                    Minimum = oneHourElectricities.Where(a => a.DateTime.Date == d.Date).Min(a => a.KiloWatt),
+                    DateTime = d.Date
+                });
+            }
+            
             return Ok(result);
         }
 
